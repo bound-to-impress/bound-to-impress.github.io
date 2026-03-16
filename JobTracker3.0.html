@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MM34 Print Tracker | Auto-Save</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --accent: #10b981;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .main-card {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .status-pill {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        header {
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+        }
+
+        .job-title-input {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary);
+            border: 2px solid transparent;
+            width: 100%;
+            background: transparent;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .job-title-input:focus { outline: none; background: #f1f5f9; border-color: var(--border); }
+
+        .config-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            align-items: end;
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .input-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; }
+        
+        .input-group input {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .btn-apply {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn-apply:active { transform: scale(0.98); }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0 1rem 0;
+        }
+
+        #progress-text { font-weight: 800; font-size: 1.25rem; }
+
+        .progress-bg {
+            width: 100%;
+            height: 12px;
+            background: var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        #progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.4s ease;
+        }
+
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .batch-item {
+            border: 2px solid var(--border);
+            padding: 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            background: white;
+        }
+
+        .batch-item:hover { border-color: var(--primary); }
+        .batch-item input { width: 1.25rem; height: 1.25rem; accent-color: var(--accent); cursor: pointer; }
+        
+        .batch-item.done { background: #f0fdf4; border-color: var(--accent); }
+        .batch-item.done span { text-decoration: line-through; color: #166534; opacity: 0.6; }
+
+        .footer-btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .reset-btn {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-card">
+    <div id="saveStatus" class="status-pill">✓ PROGRESS SAVED</div>
+    
+    <header>
+        <input type="text" class="job-title-input" id="jobName" value="MM34 SACS Q Print Job" oninput="saveAll()">
+        
+        <div class="config-bar">
+            <div class="input-group">
+                <label>Total Books</label>
+                <input type="number" id="totalQty" value="675">
+            </div>
+            <div class="input-group">
+                <label>Books Per Batch</label>
+                <input type="number" id="batchSize" value="50">
+            </div>
+            <button class="btn-apply" onclick="confirmRebuild()">Rebuild Grid</button>
+        </div>
+    </header>
+
+    <div class="stats-row">
+        <span style="font-weight: 600; color: #64748b;">Job Completion</span>
+        <span id="progress-text">0 / 675</span>
+    </div>
+    <div class="progress-bg">
+        <div id="progress-fill"></div>
+    </div>
+
+    <div id="grid" class="checklist-grid"></div>
+
+    <div class="footer-btns">
+        <button class="reset-btn" onclick="resetCheckboxes()">Reset Checks</button>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'print_job_data';
+
+    // 1. Initial Load from LocalStorage
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            document.getElementById('jobName').value = data.jobName;
+            document.getElementById('totalQty').value = data.totalQty;
+            document.getElementById('batchSize').value = data.batchSize;
+            renderGrid(data.checkedIndices);
+        } else {
+            renderGrid();
+        }
+    });
+
+    // 2. Render the Grid
+    function renderGrid(savedIndices = []) {
+        const grid = document.getElementById('grid');
+        const total = parseInt(document.getElementById('totalQty').value) || 0;
+        const step = parseInt(document.getElementById('batchSize').value) || 1;
+        
+        grid.innerHTML = '';
+        let remaining = total;
+        let index = 0;
+        let batchCount = 1;
+
+        while (remaining > 0) {
+            const currentBatchSize = Math.min(remaining, step);
+            const label = document.createElement('label');
+            label.className = 'batch-item';
+            
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.dataset.val = currentBatchSize;
+            cb.dataset.idx = index;
+            
+            // Apply saved state
+            if (savedIndices.includes(index)) {
+                cb.checked = true;
+                label.classList.add('done');
+            }
+
+            cb.onchange = function() {
+                this.parentElement.classList.toggle('done', this.checked);
+                updateStats();
+                saveAll();
+                showStatus();
+            };
+
+            const span = document.createElement('span');
+            span.textContent = `Batch ${batchCount}: ${currentBatchSize}`;
+
+            label.appendChild(cb);
+            label.appendChild(span);
+            grid.appendChild(label);
+
+            remaining -= currentBatchSize;
+            index++;
+            batchCount++;
+        }
+        updateStats();
+    }
+
+    // 3. Logic to Save everything
+    function saveAll() {
+        const checkedBoxes = document.querySelectorAll('input[type="checkbox"]:checked');
+        const checkedIndices = Array.from(checkedBoxes).map(cb => parseInt(cb.dataset.idx));
+
+        const data = {
+            jobName: document.getElementById('jobName').value,
+            totalQty: document.getElementById('totalQty').value,
+            batchSize: document.getElementById('batchSize').value,
+            checkedIndices: checkedIndices
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function confirmRebuild() {
+        if (confirm("Changing settings will clear current progress. Proceed?")) {
+            renderGrid();
+            saveAll();
+        }
+    }
+
+    function updateStats() {
+        const total = parseInt(document.getElementById('totalQty').value) || 0;
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        let completed = 0;
+
+        checkboxes.forEach(box => {
+            if (box.checked) completed += parseInt(box.dataset.val);
+        });
+
+        const percent = total > 0 ? (completed / total) * 100 : 0;
+        document.getElementById('progress-fill').style.width = percent + '%';
+        document.getElementById('progress-text').textContent = `${completed} / ${total}`;
+    }
+
+    function showStatus() {
+        const pill = document.getElementById('saveStatus');
+        pill.style.opacity = '1';
+        setTimeout(() => { pill.style.opacity = '0'; }, 1500);
+    }
+
+    function resetCheckboxes() {
+        if(confirm("Clear all checkmarks?")) {
+            document.querySelectorAll('input[type="checkbox"]').forEach(box => {
+                box.checked = false;
+                box.parentElement.classList.remove('done');
+            });
+            updateStats();
+            saveAll();
+        }
+    }
+</script>
+
+</body>
+</html>

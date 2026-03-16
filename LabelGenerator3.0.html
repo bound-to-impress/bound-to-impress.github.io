@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100mm Label Generator</title>
+    <style>
+        /* Modern CSS Variables for easy theming */
+        :root {
+            /* Light Mode Variables */
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --input-bg: #ffffff;
+            --btn-clear-bg: #f3f4f6;
+            --btn-clear-hover: #e5e7eb;
+            
+            /* Default Dimensions (Landscape 100x75) */
+            --label-width: 100mm;
+            --label-height: 75mm;
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --bg-color: #111827;
+            --card-bg: #1f2937;
+            --text-color: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-color: #4b5563;
+            --input-bg: #374151;
+            --btn-clear-bg: #374151;
+            --btn-clear-hover: #4b5563;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            padding: 3rem 2rem;
+            gap: 3rem;
+            justify-content: center;
+            align-items: flex-start;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        /* --- Global Theme Toggle Button --- */
+        .btn-theme-global {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+            z-index: 100;
+        }
+
+        .btn-theme-global:hover {
+            background: var(--btn-clear-hover);
+            transform: scale(1.05);
+        }
+
+        /* --- UI Control Panel --- */
+        .control-panel {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: background-color 0.3s;
+        }
+
+        .control-panel h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-color);
+        }
+        
+        .control-panel p.subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .input-group input, 
+        .input-group select {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s, color 0.3s;
+        }
+
+        .input-group input:focus, 
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .actions {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .btn-print {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-print:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-clear {
+            background-color: var(--btn-clear-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-clear:hover {
+            background-color: var(--btn-clear-hover);
+        }
+
+        /* --- Preview Area --- */
+        .preview-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .preview-title {
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+            transition: color 0.3s;
+        }
+
+        /* --- The Label Canvas --- */
+        .label {
+            background: #ffffff !important;
+            color: #000000 !important;
+            width: var(--label-width);
+            height: var(--label-height);
+            border: 2px dashed #9ca3af;
+            padding: 5mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            gap: 3mm;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+            word-wrap: break-word;
+            transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+        }
+
+        .label-line {
+            width: 100%;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        /* Typographic hierarchy */
+        #l1-display { font-size: 26pt; font-weight: 800; }
+        #l2-display { font-size: 18pt; font-weight: 600; }
+        #l3-display { font-size: 14pt; }
+        #l4-display { font-size: 14pt; }
+        #l5-display { font-size: 14pt; color: #4b5563 !important; }
+        #l6-display { font-size: 12pt; font-weight: 500; color: #6b7280 !important; }
+
+        /* --- Print Styles --- */
+        @media print {
+            @page {
+                margin: 0;
+                /* Note: actual size is set dynamically via JavaScript injection */
+            }
+
+            body {
+                background: none;
+                padding: 0 !important;
+                margin: 0 !important;
+                display: block;
+            }
+
+            .control-panel, .preview-title, .btn-theme-global {
+                display: none !important;
+            }
+
+            .preview-container { margin: 0; padding: 0; }
+
+            .label {
+                border: none;
+                box-shadow: none;
+                padding: 4mm;
+                page-break-after: avoid;
+                transition: none; /* Instant dimensions for printing */
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body { flex-direction: column; align-items: center; padding-top: 4.5rem; }
+        }
+    </style>
+    <style id="dynamic-print-style"></style>
+</head>
+<body>
+
+    <button id="theme-toggle" class="btn-theme-global" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+
+    <div class="control-panel">
+        <h1>Label Generator</h1>
+        <p class="subtitle">Customizable Format</p>
+
+        <div class="settings-grid">
+            <div class="input-group">
+                <label for="label-size">Size</label>
+                <select id="label-size" onchange="updateLabelDimensions()">
+                    <option value="75">75mm</option>
+                    <option value="150">150mm</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="label-orient">Orientation</label>
+                <select id="label-orient" onchange="updateLabelDimensions()">
+                    <option value="landscape">Landscape</option>
+                    <option value="portrait">Portrait</option>
+                </select>
+            </div>
+        </div>
+
+        <hr style="margin-bottom: 1.5rem; border: 0; border-top: 1px solid var(--border-color);">
+
+        <div class="input-group">
+            <label for="line1">Line 1 (Heading)</label>
+            <input type="text" id="line1" placeholder="Main Title" maxlength="40">
+        </div>
+        <div class="input-group">
+            <label for="line2">Line 2 (Subheading)</label>
+            <input type="text" id="line2" placeholder="Subtitle or Part Number" maxlength="50">
+        </div>
+        <div class="input-group">
+            <label for="line3">Line 3</label>
+            <input type="text" id="line3" placeholder="Detail 1" maxlength="60">
+        </div>
+        <div class="input-group">
+            <label for="line4">Line 4</label>
+            <input type="text" id="line4" placeholder="Detail 2" maxlength="60">
+        </div>
+        <div class="input-group">
+            <label for="line5">Line 5 (Footer)</label>
+            <input type="text" id="line5" placeholder="Additional info or Date" maxlength="60">
+        </div>
+        <div class="input-group">
+            <label for="line6">Line 6 (Website)</label>
+            <select id="line6">
+                <option value="">-- No Website --</option>
+                <option value="thebindinghq.au">thebindinghq.au</option>
+                <option value="boundtoimpress.com.au">boundtoimpress.com.au</option>
+                <option value="ranzprint.com.au">ranzprint.com.au</option>
+            </select>
+        </div>
+
+        <div class="actions">
+            <button class="btn-clear" onclick="clearFields()">Clear</button>
+            <button class="btn-print" onclick="window.print()">Print Label</button>
+        </div>
+    </div>
+
+    <div class="preview-container">
+        <div class="preview-title">Live Preview</div>
+        <div class="label" id="label-preview">
+            <div id="l1-display" class="label-line">Main Title</div>
+            <div id="l2-display" class="label-line">Subtitle or Part Number</div>
+            <div id="l3-display" class="label-line">Detail 1</div>
+            <div id="l4-display" class="label-line">Detail 2</div>
+            <div id="l5-display" class="label-line">Additional info or Date</div>
+            <div id="l6-display" class="label-line">Website (Optional)</div>
+        </div>
+    </div>
+
+    <script>
+        const lines = [
+            { inputId: 'line1', displayId: 'l1-display', default: 'Main Title' },
+            { inputId: 'line2', displayId: 'l2-display', default: 'Subtitle or Part Number' },
+            { inputId: 'line3', displayId: 'l3-display', default: 'Detail 1' },
+            { inputId: 'line4', displayId: 'l4-display', default: 'Detail 2' },
+            { inputId: 'line5', displayId: 'l5-display', default: 'Additional info or Date' },
+            { inputId: 'line6', displayId: 'l6-display', default: 'Website (Optional)' }
+        ];
+
+        // Live text updates
+        lines.forEach(line => {
+            const inputEl = document.getElementById(line.inputId);
+            inputEl.addEventListener('input', updatePreview);
+            if (inputEl.tagName === 'SELECT') {
+                inputEl.addEventListener('change', updatePreview);
+            }
+        });
+
+        function updatePreview() {
+            let hasAnyText = false;
+            lines.forEach(line => {
+                const val = document.getElementById(line.inputId).value;
+                if (val.trim() !== '') hasAnyText = true;
+            });
+
+            lines.forEach(line => {
+                const inputEl = document.getElementById(line.inputId);
+                const displayEl = document.getElementById(line.displayId);
+                
+                if (!hasAnyText) {
+                    displayEl.textContent = line.default;
+                    displayEl.style.display = 'block';
+                } else {
+                    displayEl.textContent = inputEl.value;
+                    displayEl.style.display = inputEl.value.trim() === '' ? 'none' : 'block';
+                }
+            });
+        }
+
+        // Handle Size and Orientation Logic
+        function updateLabelDimensions() {
+            const sizeVal = document.getElementById('label-size').value;
+            const orientVal = document.getElementById('label-orient').value;
+            const preview = document.getElementById('label-preview');
+            const dynamicStyle = document.getElementById('dynamic-print-style');
+
+            let width, height;
+
+            if (orientVal === 'landscape') {
+                width = '100mm';
+                height = sizeVal + 'mm';
+            } else {
+                width = sizeVal + 'mm';
+                height = '100mm';
+            }
+
+            // Update Preview variables
+            preview.style.width = width;
+            preview.style.height = height;
+
+            // Inject dynamic @page CSS for printing
+            dynamicStyle.innerHTML = `
+                @media print {
+                    @page { size: ${width} ${height}; }
+                    .label { width: ${width}; height: ${height}; }
+                }
+            `;
+        }
+
+        function clearFields() {
+            lines.forEach(line => {
+                document.getElementById(line.inputId).value = '';
+            });
+            updatePreview();
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const themeBtn = document.getElementById('theme-toggle');
+            themeBtn.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        }
+
+        // Initialize on load
+        updateLabelDimensions();
+        updatePreview();
+    </script>
+</body>
+</html>
