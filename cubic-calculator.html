@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cubic Weight Calculator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
 
@@ -12,14 +12,6 @@
         <h1 class="text-2xl font-bold text-slate-800 mb-6 text-center">Cubic Weight Calculator</h1>
 
         <form id="calculatorForm" class="space-y-4">
-            <div>
-                <label for="unit" class="block text-sm font-medium text-slate-700">Measurement Unit</label>
-                <select id="unit" class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="cm">Centimetres (cm)</option>
-                    <option value="mm">Millimetres (mm)</option>
-                </select>
-            </div>
-
             <div class="grid grid-cols-3 gap-4">
                 <div>
                     <label for="length" class="block text-sm font-medium text-slate-700">Length</label>
@@ -38,6 +30,14 @@
             <div>
                 <label for="weight" class="block text-sm font-medium text-slate-700">Actual Weight (kg)</label>
                 <input type="number" id="weight" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="unit" class="block text-sm font-medium text-slate-700">Measurement Unit</label>
+                <select id="unit" class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="cm" selected>Centimetres (cm)</option>
+                    <option value="mm">Millimetres (mm)</option>
+                </select>
             </div>
 
             <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
