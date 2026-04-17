@@ -85,11 +85,15 @@
         const unitSelect = document.getElementById('unit');
         const dimensionUnitLabels = document.querySelectorAll('.dimension-unit');
 
+        const savedUnit = localStorage.getItem('measurementUnit');
+        if (savedUnit) unitSelect.value = savedUnit;
+
         function updateDimensionUnits() {
             const unit = unitSelect.value;
             dimensionUnitLabels.forEach((label) => {
                 label.textContent = `(${unit})`;
             });
+            localStorage.setItem('measurementUnit', unit);
         }
 
         unitSelect.addEventListener('change', updateDimensionUnits);
