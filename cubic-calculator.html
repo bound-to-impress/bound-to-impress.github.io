@@ -14,15 +14,15 @@
         <form id="calculatorForm" class="space-y-4">
             <div class="grid grid-cols-3 gap-4">
                 <div>
-                    <label for="length" class="block text-sm font-medium text-slate-700">Length</label>
+                    <label for="length" class="block text-sm font-medium text-slate-700">Length <span class="dimension-unit">(cm)</span></label>
                     <input type="number" id="length" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="width" class="block text-sm font-medium text-slate-700">Width</label>
+                    <label for="width" class="block text-sm font-medium text-slate-700">Width <span class="dimension-unit">(cm)</span></label>
                     <input type="number" id="width" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="height" class="block text-sm font-medium text-slate-700">Height</label>
+                    <label for="height" class="block text-sm font-medium text-slate-700">Height <span class="dimension-unit">(cm)</span></label>
                     <input type="number" id="height" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
@@ -52,6 +52,19 @@
     </div>
 
     <script>
+        const unitSelect = document.getElementById('unit');
+        const dimensionUnitLabels = document.querySelectorAll('.dimension-unit');
+
+        function updateDimensionUnits() {
+            const unit = unitSelect.value;
+            dimensionUnitLabels.forEach((label) => {
+                label.textContent = `(${unit})`;
+            });
+        }
+
+        unitSelect.addEventListener('change', updateDimensionUnits);
+        updateDimensionUnits();
+
         document.getElementById('calculatorForm').addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent page reload
 
