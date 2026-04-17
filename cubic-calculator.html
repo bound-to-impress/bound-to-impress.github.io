@@ -5,42 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cubic Weight Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-start justify-center p-4 pt-6 font-sans">
+<body class="bg-slate-100 dark:bg-slate-900 min-h-screen flex items-start justify-center p-4 pt-6 font-sans transition-colors duration-200">
 
-    <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-md">
-        <h1 class="text-2xl font-bold text-slate-800 mb-6 text-center">Cubic Weight Calculator</h1>
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-md">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Cubic Weight Calculator</h1>
+            <button id="darkToggle" aria-label="Toggle dark mode" class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <span class="material-icons" id="darkToggleIcon">dark_mode</span>
+            </button>
+        </div>
 
         <form id="calculatorForm" class="space-y-4">
             <div class="grid grid-cols-3 gap-4">
                 <div>
-                    <label for="length" class="block text-sm font-medium text-slate-700">Length <span class="dimension-unit">(cm)</span></label>
-                    <input type="number" id="length" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="length" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Length <span class="dimension-unit">(cm)</span></label>
+                    <input type="number" id="length" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="width" class="block text-sm font-medium text-slate-700">Width <span class="dimension-unit">(cm)</span></label>
-                    <input type="number" id="width" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="width" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Width <span class="dimension-unit">(cm)</span></label>
+                    <input type="number" id="width" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label for="height" class="block text-sm font-medium text-slate-700">Height <span class="dimension-unit">(cm)</span></label>
-                    <input type="number" id="height" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="height" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Height <span class="dimension-unit">(cm)</span></label>
+                    <input type="number" id="height" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div>
-                <label for="weight" class="block text-sm font-medium text-slate-700">Actual Weight (kg)</label>
-                <input type="number" id="weight" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label for="weight" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Actual Weight (kg)</label>
+                <input type="number" id="weight" min="0" step="any" required class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div>
-                <label for="unit" class="block text-sm font-medium text-slate-700">Measurement Unit</label>
-                <select id="unit" class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label for="unit" class="block text-sm font-medium text-slate-700 dark:text-slate-300">Measurement Unit</label>
+                <select id="unit" class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-100 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="cm" selected>Centimetres (cm)</option>
                     <option value="mm">Millimetres (mm)</option>
                 </select>
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
                 Calculate
             </button>
         </form>
@@ -52,6 +61,27 @@
     </div>
 
     <script>
+        // Dark mode
+        const html = document.documentElement;
+        const darkToggle = document.getElementById('darkToggle');
+        const darkToggleIcon = document.getElementById('darkToggleIcon');
+
+        function applyDarkMode(isDark) {
+            html.classList.toggle('dark', isDark);
+            darkToggleIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+
+        const savedDark = localStorage.getItem('darkMode');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyDarkMode(savedDark !== null ? savedDark === 'true' : prefersDark);
+
+        darkToggle.addEventListener('click', () => {
+            const isDark = !html.classList.contains('dark');
+            applyDarkMode(isDark);
+            localStorage.setItem('darkMode', isDark);
+        });
+
+        // Unit labels
         const unitSelect = document.getElementById('unit');
         const dimensionUnitLabels = document.querySelectorAll('.dimension-unit');
 
@@ -65,17 +95,16 @@
         unitSelect.addEventListener('change', updateDimensionUnits);
         updateDimensionUnits();
 
+        // Calculator
         document.getElementById('calculatorForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent page reload
+            e.preventDefault();
 
-            // Get values
             const unit = document.getElementById('unit').value;
             let length = parseFloat(document.getElementById('length').value);
             let width = parseFloat(document.getElementById('width').value);
             let height = parseFloat(document.getElementById('height').value);
             const actualWeight = parseFloat(document.getElementById('weight').value);
 
-            // Convert dimensions to meters for standard cubic weight formula (L * W * H * 250)
             if (unit === 'cm') {
                 length = length / 100;
                 width = width / 100;
@@ -86,29 +115,24 @@
                 height = height / 1000;
             }
 
-            // Calculate Cubic Weight
             const cubicVolume = length * width * height;
             const cubicWeight = cubicVolume * 250;
 
-            // UI Elements
             const resultAlert = document.getElementById('resultAlert');
             const resultText = document.getElementById('resultText');
             const detailsText = document.getElementById('detailsText');
 
-            // Reset classes
-            resultAlert.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border-red-200', 'bg-green-50', 'text-green-800', 'border-green-200');
+            resultAlert.classList.remove('hidden', 'bg-red-50', 'text-red-800', 'border-red-200', 'bg-green-50', 'text-green-800', 'border-green-200', 'dark:bg-red-900/30', 'dark:text-red-300', 'dark:border-red-800', 'dark:bg-green-900/30', 'dark:text-green-300', 'dark:border-green-800');
             resultAlert.classList.add('border');
 
-            // Logic to check if cubic weight > actual weight
             if (cubicWeight > actualWeight) {
-                resultAlert.classList.add('bg-red-50', 'text-red-800', 'border-red-200');
+                resultAlert.classList.add('bg-red-50', 'text-red-800', 'border-red-200', 'dark:bg-red-900/30', 'dark:text-red-300', 'dark:border-red-800');
                 resultText.textContent = "⚠️ The Cubic Weight is GREATER than the Actual Weight.";
             } else {
-                resultAlert.classList.add('bg-green-50', 'text-green-800', 'border-green-200');
+                resultAlert.classList.add('bg-green-50', 'text-green-800', 'border-green-200', 'dark:bg-green-900/30', 'dark:text-green-300', 'dark:border-green-800');
                 resultText.textContent = "✅ The Cubic Weight is LESS than or equal to the Actual Weight.";
             }
 
-            // Display the numbers so the user can verify
             detailsText.textContent = `Calculated Cubic Weight: ${cubicWeight.toFixed(2)} kg | Actual Weight: ${actualWeight.toFixed(2)} kg`;
         });
     </script>
