@@ -175,7 +175,12 @@
             localStorage.setItem('darkMode', isDark);
         });
 
-        const numberFormatter = new Intl.NumberFormat(undefined, {
+        const weightFormatter = new Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        });
+
+        const areaFormatter = new Intl.NumberFormat(undefined, {
             maximumFractionDigits: 3
         });
 
@@ -193,9 +198,9 @@
             const totalWeightGrams = weightPerSheetGrams * quantity;
             const totalWeightKilograms = totalWeightGrams / 1000;
 
-            document.getElementById('resultText').textContent = `${numberFormatter.format(totalWeightKilograms)} kg`;
+            document.getElementById('resultText').textContent = `${weightFormatter.format(totalWeightKilograms)} kg`;
             document.getElementById('detailsText').textContent =
-                `${numberFormatter.format(weightPerSheetGrams)} g per sheet · ${numberFormatter.format(totalWeightGrams)} g total · ${numberFormatter.format(totalAreaSquareMetres)} m² total area`;
+                `${weightFormatter.format(weightPerSheetGrams)} g per sheet · ${weightFormatter.format(totalWeightGrams)} g total · ${areaFormatter.format(totalAreaSquareMetres)} m² total area`;
             document.getElementById('resultAlert').classList.remove('hidden');
         });
     </script>
