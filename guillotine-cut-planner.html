@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guillotine Cut Planner</title>
+    <script src="assets/vendor/tailwind/browser.js"></script>
+    <link href="assets/vendor/material-icons/material-icons.css" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <style>
+        #mockupPage { display: none; }
+        @page { size: auto; margin: 12mm; }
+        @media print {
+            body { background: white !important; padding: 0 !important; margin: 0 !important; display: block !important; }
+            body > main { display: none !important; }
+            #mockupPage { display: block !important; }
+            #mockupPage svg { width: 100%; height: auto; max-height: 95vh; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 min-h-dvh flex items-start justify-center p-4 pt-6 font-sans transition-colors duration-200">
+
+    <main class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-xl">
+
+        <div class="flex items-center justify-between gap-4 mb-6">
+            <h1 class="text-2xl font-bold text-balance text-slate-800 dark:text-slate-100">Guillotine Cut Planner</h1>
+            <button id="darkToggle" type="button" aria-label="Toggle dark mode"
+                class="flex size-10 shrink-0 items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <span class="material-icons" id="darkToggleIcon" aria-hidden="true">dark_mode</span>
+            </button>
+        </div>
+
+        <form id="plannerForm" novalidate class="space-y-5">
+
+            <!-- Unit selector -->
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300" id="unitGroupLabel">Units</span>
+                <div role="group" aria-labelledby="unitGroupLabel" class="inline-flex rounded-md border border-slate-300 dark:border-slate-600 overflow-hidden text-sm font-semibold">
+                    <button type="button" id="unitMm" aria-pressed="true"
+                        class="px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">mm</button>
+                    <button type="button" id="unitIn" aria-pressed="false"
+                        class="px-3 py-1.5 border-l border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">in</button>
+                </div>
+            </div>
+
+            <!-- Sheet Size -->
+            <fieldset>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <legend class="text-sm font-medium text-slate-700 dark:text-slate-300">Sheet size</legend>
+                    <div class="flex items-center gap-1.5">
+                        <select id="sheetPreset" aria-label="Sheet size preset"
+                            class="text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-1 pl-2 pr-6 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select preset…</option>
+                            <option value="sra3">SRA3</option>
+                            <option value="a3">A3</option>
+                            <option value="a4">A4</option>
+                        </select>
+                        <button type="button" id="sheetOrient" aria-label="Swap sheet width and height" title="Swap width and height"
+                            class="flex size-8 items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="material-icons text-[20px]" id="sheetOrientIcon" aria-hidden="true">portrait</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="sheetW" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Width <span class="unit-label">(mm)</span></label>
+                        <input type="number" id="sheetW" min="0.01" step="any" inputmode="decimal" autocomplete="off"
+                            aria-describedby="sheetW-err"
+                            class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p id="sheetW-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                    </div>
+                    <div>
+                        <label for="sheetH" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Height <span class="unit-label">(mm)</span></label>
+                        <input type="number" id="sheetH" min="0.01" step="any" inputmode="decimal" autocomplete="off"
+                            aria-describedby="sheetH-err"
+                            class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p id="sheetH-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                    </div>
+                </div>
+                <p id="sheet-block-err" role="alert" class="mt-2 text-xs text-red-600 dark:text-red-400 hidden"></p>
+            </fieldset>
+
+            <!-- Finished Size -->
+            <fieldset>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <legend class="text-sm font-medium text-slate-700 dark:text-slate-300">Finished size</legend>
+                    <div class="flex items-center gap-1.5">
+                        <select id="finPreset" aria-label="Finished size preset"
+                            class="text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 py-1 pl-2 pr-6 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select preset…</option>
+                            <option value="a4">A4</option>
+                            <option value="a5">A5</option>
+                            <option value="a6">A6</option>
+                            <option value="card">Card (63 × 88)</option>
+                        </select>
+                        <button type="button" id="finOrient" aria-label="Swap finished width and height" title="Swap width and height"
+                            class="flex size-8 items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="material-icons text-[20px]" id="finOrientIcon" aria-hidden="true">portrait</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="finW" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Width <span class="unit-label">(mm)</span></label>
+                        <input type="number" id="finW" min="0.01" step="any" inputmode="decimal" autocomplete="off"
+                            aria-describedby="finW-err"
+                            class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p id="finW-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                    </div>
+                    <div>
+                        <label for="finH" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Height <span class="unit-label">(mm)</span></label>
+                        <input type="number" id="finH" min="0.01" step="any" inputmode="decimal" autocomplete="off"
+                            aria-describedby="finH-err"
+                            class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p id="finH-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Layout -->
+            <fieldset>
+                <legend class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Layout</legend>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label for="rows" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Rows</label>
+                        <input type="number" id="rows" min="1" step="1" value="1" inputmode="numeric" autocomplete="off"
+                            aria-describedby="rows-err"
+                            class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p id="rows-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                    </div>
+                    <div>
+                        <label for="cols" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Columns</label>
+                        <input type="number" id="cols" min="1" step="1" value="1" inputmode="numeric" autocomplete="off"
+                            aria-describedby="cols-err"
+                            class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p id="cols-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label for="gutter" class="block text-xs font-medium text-slate-600 dark:text-slate-400">Gutter — bleed/safe margin <span class="unit-label">(mm)</span></label>
+                    <input type="number" id="gutter" min="0" max="14.9999" step="any" value="0" inputmode="decimal" autocomplete="off"
+                        aria-describedby="gutter-err"
+                        class="mt-1 block w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p id="gutter-err" role="alert" class="mt-1 text-xs text-red-600 dark:text-red-400 hidden"></p>
+                </div>
+            </fieldset>
+
+            <button type="submit"
+                class="w-full bg-blue-600 text-white font-semibold py-2.5 px-4 rounded-md hover:bg-blue-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                Generate Commands
+            </button>
+        </form>
+
+        <!-- Results -->
+        <section id="results" aria-live="polite" aria-label="Cut plan results" class="hidden mt-6 space-y-4">
+
+            <!-- Summary -->
+            <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-4">
+                <h2 class="text-sm font-semibold text-balance text-slate-800 dark:text-slate-100 mb-3">Summary</h2>
+                <dl id="summary" class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm tabular-nums"></dl>
+            </div>
+
+            <!-- Safety warning -->
+            <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4">
+                <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Safety notice</p>
+                <p class="mt-1 text-sm text-pretty text-amber-700 dark:text-amber-400">Verify every measurement independently before cutting. These commands must only be used by trained operators following the guillotine manufacturer's procedures. This tool does not verify machine capacity or operational safety.</p>
+            </div>
+
+            <!-- Command list -->
+            <div id="commandList"></div>
+
+            <!-- Print mockup button -->
+            <div class="pt-2">
+                <button type="button" id="printMockupBtn"
+                    class="flex items-center gap-2 w-full justify-center border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium py-2.5 px-4 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <span class="material-icons text-[18px]" aria-hidden="true">print</span>
+                    Print Mockup
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Print-only mockup page (hidden on screen, shown on print) -->
+    <div id="mockupPage" aria-hidden="true">
+        <div style="font-family:Arial,sans-serif;font-size:11pt;margin-bottom:6mm;">
+            <strong>Guillotine Cut Planner — Layout Mockup</strong>
+            <span id="mockupSubtitle" style="margin-left:8mm;color:#555;font-size:9pt;"></span>
+        </div>
+        <div id="mockupSvg"></div>
+        <p style="margin-top:5mm;font-size:7.5pt;color:#777;">Verify all measurements independently before cutting. For use by trained operators only.</p>
+    </div>
+
+    <script>
+        // ─── State ───────────────────────────────────────────────────────────────
+        let currentPlan = null;
+
+        // ─── Constants ────────────────────────────────────────────────────────────
+        const MM_PER_IN    = 25.4;
+        const GUTTER_MAX_MM = 15;
+
+        // Presets stored in mm as [width, height]
+        const SHEET_PRESETS = {
+            sra3: [320, 450],
+            a3:   [297, 420],
+            a4:   [210, 297],
+        };
+        const FIN_PRESETS = {
+            a4:   [210, 297],
+            a5:   [148, 210],
+            a6:   [105, 148],
+            card: [63,  88 ],
+        };
+
+        // ─── Dark mode ────────────────────────────────────────────────────────────
+        const html          = document.documentElement;
+        const darkToggleBtn = document.getElementById('darkToggle');
+        const darkIcon      = document.getElementById('darkToggleIcon');
+
+        function applyDarkMode(on) {
+            html.classList.toggle('dark', on);
+            darkIcon.textContent = on ? 'light_mode' : 'dark_mode';
+        }
+
+        const savedDark = localStorage.getItem('darkMode');
+        applyDarkMode(savedDark !== null ? savedDark === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        darkToggleBtn.addEventListener('click', () => {
+            const on = !html.classList.contains('dark');
+            applyDarkMode(on);
+            localStorage.setItem('darkMode', on);
+        });
+
+        // ─── Unit management ──────────────────────────────────────────────────────
+        let activeUnit = localStorage.getItem('guillotineUnit') || 'mm';
+
+        const unitMmBtn   = document.getElementById('unitMm');
+        const unitInBtn   = document.getElementById('unitIn');
+        const unitLabels  = document.querySelectorAll('.unit-label');
+        const gutterInput = document.getElementById('gutter');
+
+        const ACTIVE_CLS   = 'bg-blue-600 text-white';
+        const INACTIVE_CLS = 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-600';
+
+        function applyUnitUI() {
+            const mm = activeUnit === 'mm';
+            unitMmBtn.setAttribute('aria-pressed', mm ? 'true' : 'false');
+            unitInBtn.setAttribute('aria-pressed', mm ? 'false' : 'true');
+            unitMmBtn.className = `px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${mm ? ACTIVE_CLS : INACTIVE_CLS}`;
+            unitInBtn.className = `px-3 py-1.5 border-l border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${mm ? INACTIVE_CLS : ACTIVE_CLS}`;
+            const lbl = mm ? '(mm)' : '(in)';
+            unitLabels.forEach(el => { el.textContent = lbl; });
+            gutterInput.setAttribute('max', mm ? '14.9999' : (GUTTER_MAX_MM / MM_PER_IN).toFixed(4));
+        }
+
+        function convertField(input, from, to) {
+            const v = parseFloat(input.value);
+            if (!isFinite(v)) return;
+            const mm  = from === 'in' ? v * MM_PER_IN : v;
+            const out = to   === 'in' ? mm / MM_PER_IN : mm;
+            input.value = parseFloat(out.toFixed(2));
+        }
+
+        const DIM_IDS = ['sheetW', 'sheetH', 'finW', 'finH', 'gutter'];
+
+        function switchUnit(to) {
+            if (to === activeUnit) return;
+            const from = activeUnit;
+            activeUnit = to;
+            DIM_IDS.forEach(id => convertField(document.getElementById(id), from, to));
+            applyUnitUI();
+            localStorage.setItem('guillotineUnit', to);
+            clearResults();
+        }
+
+        unitMmBtn.addEventListener('click', () => switchUnit('mm'));
+        unitInBtn.addEventListener('click', () => switchUnit('in'));
+        applyUnitUI();
+
+        // ─── Inputs & preset references ──────────────────────────────────────────
+        const sheetWIn      = document.getElementById('sheetW');
+        const sheetHIn      = document.getElementById('sheetH');
+        const sheetPresetEl = document.getElementById('sheetPreset');
+        const sheetOrientEl = document.getElementById('sheetOrient');
+        const sheetOrientIc = document.getElementById('sheetOrientIcon');
+
+        const finWIn        = document.getElementById('finW');
+        const finHIn        = document.getElementById('finH');
+        const finPresetEl   = document.getElementById('finPreset');
+        const finOrientEl   = document.getElementById('finOrient');
+        const finOrientIc   = document.getElementById('finOrientIcon');
+
+        // ─── Orientation icon ─────────────────────────────────────────────────────
+        function refreshOrientIcon(iconEl, wVal, hVal) {
+            const w = parseFloat(wVal), h = parseFloat(hVal);
+            if (!isFinite(w) || !isFinite(h)) return;
+            iconEl.textContent = w > h ? 'crop_landscape' : 'portrait';
+        }
+
+        // ─── Presets ──────────────────────────────────────────────────────────────
+        function applyPreset(wIn, hIn, presetEl, iconEl, presets) {
+            const key = presetEl.value;
+            if (!key || !presets[key]) return;
+            const [wMm, hMm] = presets[key];
+            const w = activeUnit === 'in' ? parseFloat((wMm / MM_PER_IN).toFixed(2)) : wMm;
+            const h = activeUnit === 'in' ? parseFloat((hMm / MM_PER_IN).toFixed(2)) : hMm;
+            wIn.value = w;
+            hIn.value = h;
+            refreshOrientIcon(iconEl, w, h);
+            clearResults();
+        }
+
+        function resetPreset(presetEl) { presetEl.value = ''; }
+
+        sheetPresetEl.addEventListener('change', () => applyPreset(sheetWIn, sheetHIn, sheetPresetEl, sheetOrientIc, SHEET_PRESETS));
+        finPresetEl.addEventListener('change',   () => applyPreset(finWIn,   finHIn,   finPresetEl,   finOrientIc,   FIN_PRESETS));
+
+        sheetWIn.addEventListener('input', () => { resetPreset(sheetPresetEl); refreshOrientIcon(sheetOrientIc, sheetWIn.value, sheetHIn.value); });
+        sheetHIn.addEventListener('input', () => { resetPreset(sheetPresetEl); refreshOrientIcon(sheetOrientIc, sheetWIn.value, sheetHIn.value); });
+        finWIn.addEventListener('input',   () => { resetPreset(finPresetEl);   refreshOrientIcon(finOrientIc,   finWIn.value,   finHIn.value);   });
+        finHIn.addEventListener('input',   () => { resetPreset(finPresetEl);   refreshOrientIcon(finOrientIc,   finWIn.value,   finHIn.value);   });
+
+        // ─── Orientation toggles ──────────────────────────────────────────────────
+        function swapDims(wIn, hIn, presetEl, iconEl) {
+            const w = wIn.value, h = hIn.value;
+            if (w === '' && h === '') return;
+            wIn.value = h;
+            hIn.value = w;
+            resetPreset(presetEl);
+            refreshOrientIcon(iconEl, wIn.value, hIn.value);
+            clearResults();
+        }
+
+        sheetOrientEl.addEventListener('click', () => swapDims(sheetWIn, sheetHIn, sheetPresetEl, sheetOrientIc));
+        finOrientEl.addEventListener('click',   () => swapDims(finWIn,   finHIn,   finPresetEl,   finOrientIc));
+
+        // ─── Pure calculation functions ───────────────────────────────────────────
+
+        /**
+         * Generate cut commands for one axis.
+         * S = sheet dimension, F = finish dimension, N = piece count, G = gutter
+         * Returns array of command objects.
+         */
+        function processAxis(S, F, N, G) {
+            const cmds = [];
+            const required = N * F + (N - 1) * G;
+
+            if (S > required) {
+                cmds.push({ type: 'trim', gauge: required, excess: S - required });
+            }
+
+            if (N > 1) {
+                for (let k = N - 1; k >= 1; k--) {
+                    cmds.push({ type: 'piece', gauge: k * (F + G), depth: F });
+                    if (G > 0) {
+                        cmds.push({ type: 'gutter', gauge: k * F + (k - 1) * G, depth: G });
+                    }
+                }
+                // After the loop the remaining block equals F — no cut needed, just retain
+                cmds.push({ type: 'retain-first', depth: F });
+            }
+
+            return cmds;
+        }
+
+        /**
+         * Main planner. All dimensions in mm.
+         * Returns { ok: true, … } or { ok: false, errors: […] }
+         */
+        function planCuts(sheetWmm, sheetHmm, finWmm, finHmm, rows, cols, gutterMm) {
+            const reqW    = cols * finWmm + (cols - 1) * gutterMm;
+            const reqH    = rows * finHmm + (rows - 1) * gutterMm;
+            const qty     = rows * cols;
+            const excessW = sheetWmm - reqW;
+            const excessH = sheetHmm - reqH;
+
+            const errors = [];
+            if (excessW < 0) errors.push({ axis: 'width',  deficit: -excessW });
+            if (excessH < 0) errors.push({ axis: 'height', deficit: -excessH });
+            if (errors.length) return { ok: false, errors };
+
+            // Smallest sheet edge to backgauge.
+            // sheetW <= sheetH → width edge to backgauge → process height/rows first.
+            const heightFirst = sheetWmm <= sheetHmm;
+
+            let firstAxis, secondAxis;
+            if (heightFirst) {
+                firstAxis  = { dimName: 'height', stageLabel: 'Stage 1 — Height axis (rows)',    backgaugeEdge: sheetWmm, edgeDir: 'width',  S: sheetHmm, F: finHmm, N: rows, finDim: finHmm };
+                secondAxis = { dimName: 'width',  stageLabel: 'Stage 2 — Width axis (columns)', backgaugeEdge: finHmm,   edgeDir: 'finish', S: sheetWmm, F: finWmm, N: cols, finDim: finWmm };
+            } else {
+                firstAxis  = { dimName: 'width',  stageLabel: 'Stage 1 — Width axis (columns)', backgaugeEdge: sheetHmm, edgeDir: 'height', S: sheetWmm, F: finWmm, N: cols, finDim: finWmm };
+                secondAxis = { dimName: 'height', stageLabel: 'Stage 2 — Height axis (rows)',   backgaugeEdge: finWmm,   edgeDir: 'finish', S: sheetHmm, F: finHmm, N: rows, finDim: finHmm };
+            }
+
+            const firstCmds  = processAxis(firstAxis.S,  firstAxis.F,  firstAxis.N,  gutterMm);
+            const secondCmds = processAxis(secondAxis.S, secondAxis.F, secondAxis.N, gutterMm);
+            const noCuts     = qty === 1 && excessW === 0 && excessH === 0;
+
+            return { ok: true, sheetWmm, sheetHmm, reqW, reqH, qty, excessW, excessH, gutterMm, finWmm, finHmm, rows, cols, firstAxis, secondAxis, firstCmds, secondCmds, noCuts };
+        }
+
+        // ─── Display formatting ───────────────────────────────────────────────────
+
+        // Narrow no-break space (U+202F) between number and unit symbol.
+        const NNBSP = ' ';
+
+        function fmt(valueMm) {
+            if (activeUnit === 'in') {
+                const inches = valueMm / MM_PER_IN;
+                return parseFloat(inches.toFixed(2)).toString() + NNBSP + 'in';
+            }
+            return parseFloat(valueMm.toFixed(2)).toString() + NNBSP + 'mm';
+        }
+
+        function esc(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function dim(valueMm) {
+            return `<strong class="tabular-nums">${esc(fmt(valueMm))}</strong>`;
+        }
+
+        // ─── Rendering ───────────────────────────────────────────────────────────
+
+        function clearResults() {
+            currentPlan = null;
+            document.getElementById('results').classList.add('hidden');
+        }
+
+        function renderSummary(plan) {
+            const rows = [
+                ['Production block', `${fmt(plan.reqW)} × ${fmt(plan.reqH)}`],
+                ['Output',           `${plan.qty} piece${plan.qty === 1 ? '' : 's'} at ${fmt(plan.finWmm)} × ${fmt(plan.finHmm)}`],
+                ['Width excess',     plan.excessW === 0 ? 'No excess' : fmt(plan.excessW)],
+                ['Height excess',    plan.excessH === 0 ? 'No excess' : fmt(plan.excessH)],
+            ];
+            if (plan.gutterMm > 0) rows.push(['Gutter', fmt(plan.gutterMm)]);
+
+            document.getElementById('summary').innerHTML = rows.map(([dt, dd]) =>
+                `<dt class="text-slate-500 dark:text-slate-400">${esc(dt)}</dt>` +
+                `<dd class="font-medium text-slate-800 dark:text-slate-100 tabular-nums">${esc(dd)}</dd>`
+            ).join('');
+        }
+
+        function buildCmdHtml(cmd) {
+            switch (cmd.type) {
+                case 'trim':
+                    return `Set backgauge to ${dim(cmd.gauge)}. Cut. Discard the ${dim(cmd.excess)} offcut at the front. Retain the block against the backgauge.`;
+                case 'piece':
+                    return `Set backgauge to ${dim(cmd.gauge)}. Cut. Retain the ${dim(cmd.depth)} strip at the front. Retain the remaining block against the backgauge.`;
+                case 'gutter':
+                    return `Set backgauge to ${dim(cmd.gauge)}. Cut. Discard the ${dim(cmd.depth)} gutter strip at the front. Retain the remaining block against the backgauge.`;
+                case 'retain-first':
+                    return `Retain the remaining ${dim(cmd.depth)} block against the backgauge — this is the first piece.`;
+                default:
+                    return '';
+            }
+        }
+
+        function stageHeadingHtml(text) {
+            return `<h3 class="mt-5 mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">${esc(text)}</h3>`;
+        }
+
+        function stepHtml(num, bodyHtml) {
+            return `<div class="flex gap-3 py-2.5 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                <span class="flex-none w-7 text-right text-sm font-bold tabular-nums text-blue-600 dark:text-blue-400 pt-px">${num}.</span>
+                <span class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">${bodyHtml}</span>
+            </div>`;
+        }
+
+        function renderCommands(plan) {
+            const parts = [];
+            let n = 1;
+
+            const step = body => { parts.push(stepHtml(n++, body)); };
+            const head = text => { parts.push(stageHeadingHtml(text)); };
+
+            // Orientation
+            head('Orientation');
+            step(`Place the ${dim(plan.firstAxis.backgaugeEdge)} (${esc(plan.firstAxis.edgeDir)}) edge against the backgauge.`);
+
+            if (plan.noCuts) {
+                step('The sheet exactly matches the finished size. <strong>No cuts are required.</strong>');
+                document.getElementById('commandList').innerHTML = parts.join('');
+                return;
+            }
+
+            // Stage 1
+            head(plan.firstAxis.stageLabel);
+            for (const cmd of plan.firstCmds) {
+                step(buildCmdHtml(cmd));
+            }
+
+            // Between stages
+            head('Between stages');
+            const strips = plan.firstAxis.N === 1 ? 'the strip' : 'all equal strips';
+            step(`Align and stack ${esc(strips)}.`);
+            step(`Rotate the stack 90°.`);
+            step(`Place the ${dim(plan.firstAxis.finDim)} edge against the backgauge. Confirm the stack height is within the machine's safe cutting capacity; if not, process in separate batches.`);
+
+            // Stage 2
+            head(plan.secondAxis.stageLabel);
+            for (const cmd of plan.secondCmds) {
+                step(buildCmdHtml(cmd));
+            }
+
+            document.getElementById('commandList').innerHTML = parts.join('');
+        }
+
+        // ─── Error helpers ────────────────────────────────────────────────────────
+
+        const ERROR_FIELD_IDS = ['sheetW-err', 'sheetH-err', 'sheet-block-err', 'finW-err', 'finH-err', 'rows-err', 'cols-err', 'gutter-err'];
+        const INPUT_IDS       = ['sheetW', 'sheetH', 'finW', 'finH', 'rows', 'cols', 'gutter'];
+        const ERR_BORDER      = ['border-red-500', 'dark:border-red-500'];
+
+        function clearAllErrors() {
+            ERROR_FIELD_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = ''; el.classList.add('hidden'); }
+            });
+            INPUT_IDS.forEach(id => {
+                document.getElementById(id)?.classList.remove(...ERR_BORDER);
+            });
+        }
+
+        function showFieldError(errId, inputId, msg) {
+            const errEl = document.getElementById(errId);
+            if (errEl) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+            const inp = document.getElementById(inputId);
+            if (inp) inp.classList.add(...ERR_BORDER);
+        }
+
+        // ─── Form submission ──────────────────────────────────────────────────────
+
+        document.getElementById('plannerForm').addEventListener('submit', e => {
+            e.preventDefault();
+            clearAllErrors();
+            clearResults();
+
+            const problems = [];
+
+            function readFloat(id, label, allowZero = false) {
+                const raw = document.getElementById(id).value.trim();
+                const v   = parseFloat(raw);
+                const ok  = isFinite(v) && (allowZero ? v >= 0 : v > 0);
+                if (!ok || raw === '') {
+                    problems.push({ errId: id + '-err', inputId: id, msg: `${label} must be a positive number.` });
+                    return null;
+                }
+                return v;
+            }
+
+            function readInt(id, label) {
+                const raw = document.getElementById(id).value.trim();
+                const v   = Number(raw);
+                if (!Number.isInteger(v) || v < 1) {
+                    problems.push({ errId: id + '-err', inputId: id, msg: `${label} must be a whole number (1 or more).` });
+                    return null;
+                }
+                return v;
+            }
+
+            const sheetW  = readFloat('sheetW', 'Sheet width');
+            const sheetH  = readFloat('sheetH', 'Sheet height');
+            const finW    = readFloat('finW',   'Finished width');
+            const finH    = readFloat('finH',   'Finished height');
+            const rows    = readInt('rows',     'Rows');
+            const cols    = readInt('cols',     'Columns');
+
+            // Gutter: zero is allowed; must be < 15 mm when converted
+            const gutterRaw = parseFloat(document.getElementById('gutter').value);
+            const gutterVal = isFinite(gutterRaw) && gutterRaw >= 0 ? gutterRaw : 0;
+            const gutterMm  = activeUnit === 'in' ? gutterVal * MM_PER_IN : gutterVal;
+            if (gutterMm >= GUTTER_MAX_MM) {
+                const maxDisplay = activeUnit === 'in'
+                    ? parseFloat((GUTTER_MAX_MM / MM_PER_IN).toFixed(4)) + NNBSP + 'in'
+                    : GUTTER_MAX_MM + NNBSP + 'mm';
+                problems.push({ errId: 'gutter-err', inputId: 'gutter', msg: `Gutter must be less than ${maxDisplay}.` });
+            }
+
+            if (problems.length) {
+                problems.forEach(({ errId, inputId, msg }) => showFieldError(errId, inputId, msg));
+                document.getElementById(problems[0].inputId)?.focus();
+                return;
+            }
+
+            // Convert all inputs to mm for calculation
+            const f = activeUnit === 'in' ? MM_PER_IN : 1;
+            const plan = planCuts(sheetW * f, sheetH * f, finW * f, finH * f, rows, cols, gutterMm);
+
+            if (!plan.ok) {
+                plan.errors.forEach(({ axis, deficit }) => {
+                    const isWidth = axis === 'width';
+                    const inputId = isWidth ? 'sheetW' : 'sheetH';
+                    const errId   = inputId + '-err';
+                    showFieldError(errId, inputId, `Sheet ${axis} is too small by ${fmt(deficit)}.`);
+                });
+                document.getElementById(plan.errors[0].axis === 'width' ? 'sheetW' : 'sheetH')?.focus();
+                return;
+            }
+
+            currentPlan = plan;
+            renderSummary(plan);
+            renderCommands(plan);
+            const results = document.getElementById('results');
+            results.classList.remove('hidden');
+            results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+        // ─── Mockup SVG generator ─────────────────────────────────────────────────
+
+        function n3(v) { return Math.round(v * 1000) / 1000; }
+
+        function generateMockupSVG(plan) {
+            const { sheetWmm, sheetHmm, reqW, reqH, finWmm, finHmm, rows, cols, gutterMm, excessW, excessH } = plan;
+            const pitchW = finWmm + gutterMm;
+            const pitchH = finHmm + gutterMm;
+
+            // Crop mark dimensions proportional to sheet size
+            const shortest  = Math.min(sheetWmm, sheetHmm);
+            const cmLen     = Math.min(10, Math.max(4, shortest * 0.025));
+            const cmGap     = Math.min(2,  cmLen  * 0.35);
+            const strokeW   = Math.min(0.4, Math.max(0.15, shortest * 0.0008));
+
+            // ViewBox has padding for crop marks extending beyond sheet edge
+            const pad = cmLen + cmGap + 2;
+            const vbX = n3(-pad), vbY = n3(-pad);
+            const vbW = n3(sheetWmm + 2 * pad), vbH = n3(sheetHmm + 2 * pad);
+
+            const out = [];
+
+            // ── Defs: clip that hides crop mark segments inside piece rects ──
+            // even-odd: outer rect=1(show), each piece rect=2(clip)
+            let d = `M${n3(-pad*4)},${n3(-pad*4)}H${n3(sheetWmm+pad*4)}V${n3(sheetHmm+pad*4)}H${n3(-pad*4)}Z `;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const px = n3(c * pitchW), py = n3(r * pitchH);
+                    d += `M${px},${py}H${n3(c*pitchW+finWmm)}V${n3(r*pitchH+finHmm)}H${px}Z `;
+                }
+            }
+            out.push(`<defs><clipPath id="cm" clip-rule="evenodd"><path d="${d}"/></clipPath></defs>`);
+
+            // ── Sheet background ──
+            out.push(`<rect x="0" y="0" width="${n3(sheetWmm)}" height="${n3(sheetHmm)}" fill="#fff" stroke="#000" stroke-width="${n3(strokeW)}"/>`);
+
+            // ── Waste / excess areas ──
+            if (excessW > 0) {
+                out.push(`<rect x="${n3(reqW)}" y="0" width="${n3(excessW)}" height="${n3(sheetHmm)}" fill="#f0f0f0"/>`);
+                // "Waste" text rotated into the strip if there's room
+                if (excessW > 8) {
+                    const lfs = n3(Math.min(6, excessW * 0.35, sheetHmm * 0.04));
+                    const lx = n3(reqW + excessW / 2), ly = n3(sheetHmm / 2);
+                    out.push(`<text transform="rotate(-90,${lx},${ly})" x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="${lfs}" font-family="Arial,sans-serif" fill="#bbb">Waste</text>`);
+                }
+            }
+            if (excessH > 0) {
+                out.push(`<rect x="0" y="${n3(reqH)}" width="${n3(sheetWmm)}" height="${n3(excessH)}" fill="#f0f0f0"/>`);
+                if (excessH > 6) {
+                    const lfs = n3(Math.min(6, excessH * 0.45, reqW * 0.04));
+                    const lx = n3(reqW / 2), ly = n3(reqH + excessH / 2);
+                    out.push(`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="${lfs}" font-family="Arial,sans-serif" fill="#bbb">Waste</text>`);
+                }
+            }
+
+            // ── Piece fills ──
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const px = n3(c * pitchW), py = n3(r * pitchH);
+                    out.push(`<rect x="${px}" y="${py}" width="${n3(finWmm)}" height="${n3(finHmm)}" fill="#d8d8d8" stroke="#888" stroke-width="${n3(strokeW * 0.6)}"/>`);
+                }
+            }
+
+            // ── Interior cut lines (no-gutter case only) ──
+            if (gutterMm === 0) {
+                const dl = n3(cmLen * 0.55), dg = n3(cmLen * 0.28);
+                for (let r = 1; r < rows; r++) {
+                    const y = n3(r * finHmm);
+                    out.push(`<line x1="0" y1="${y}" x2="${n3(reqW)}" y2="${y}" stroke="#666" stroke-width="${n3(strokeW * 0.5)}" stroke-dasharray="${dl},${dg}"/>`);
+                }
+                for (let c = 1; c < cols; c++) {
+                    const x = n3(c * finWmm);
+                    out.push(`<line x1="${x}" y1="0" x2="${x}" y2="${n3(reqH)}" stroke="#666" stroke-width="${n3(strokeW * 0.5)}" stroke-dasharray="${dl},${dg}"/>`);
+                }
+            }
+
+            // ── Crop marks — clipped so they don't render inside any piece ──
+            out.push(`<g clip-path="url(#cm)">`);
+            const sw = n3(strokeW);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const px = c * pitchW, py = r * pitchH;
+                    for (const [cx, cy, dx, dy] of [
+                        [px,          py,          -1, -1],
+                        [px + finWmm, py,           1, -1],
+                        [px,          py + finHmm, -1,  1],
+                        [px + finWmm, py + finHmm,  1,  1],
+                    ]) {
+                        // Horizontal arm
+                        out.push(`<line x1="${n3(cx+dx*cmGap)}" y1="${n3(cy)}" x2="${n3(cx+dx*(cmGap+cmLen))}" y2="${n3(cy)}" stroke="#000" stroke-width="${sw}"/>`);
+                        // Vertical arm
+                        out.push(`<line x1="${n3(cx)}" y1="${n3(cy+dy*cmGap)}" x2="${n3(cx)}" y2="${n3(cy+dy*(cmGap+cmLen))}" stroke="#000" stroke-width="${sw}"/>`);
+                    }
+                }
+            }
+            out.push(`</g>`);
+
+            // ── Info label above sheet ──
+            const lfs = n3(Math.min(7, Math.max(3, shortest * 0.022)));
+            const label = `Sheet ${fmt(sheetWmm)} × ${fmt(sheetHmm)}  ·  Finish ${fmt(finWmm)} × ${fmt(finHmm)}  ·  ${rows * cols} pieces${gutterMm > 0 ? '  ·  Gutter ' + fmt(gutterMm) : ''}`;
+            out.push(`<text x="${n3(sheetWmm/2)}" y="${n3(-cmGap*1.5)}" text-anchor="middle" dominant-baseline="auto" font-size="${lfs}" font-family="Arial,sans-serif" fill="#333">${label.replace(/&/g,'&amp;')}</text>`);
+
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vbX} ${vbY} ${vbW} ${vbH}" style="width:100%;height:auto;display:block;" role="img" aria-label="Cut layout mockup">${out.join('')}</svg>`;
+        }
+
+        // ─── Print Mockup button ──────────────────────────────────────────────────
+
+        document.getElementById('printMockupBtn').addEventListener('click', () => {
+            if (!currentPlan) return;
+            document.getElementById('mockupSvg').innerHTML = generateMockupSVG(currentPlan);
+            const subtitle = `${currentPlan.rows * currentPlan.cols} pieces · ${fmt(currentPlan.finWmm)} × ${fmt(currentPlan.finHmm)}`;
+            document.getElementById('mockupSubtitle').textContent = subtitle;
+            window.print();
+        });
+    </script>
+
+</body>
+</html>
